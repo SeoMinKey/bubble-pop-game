@@ -307,6 +307,7 @@ class Game:
         pygame.display.set_caption("Bubble Pop MVP")
             # 게임 창의 제목 표시줄에 표시될 텍스트 설정
         self.clock=pygame.time.Clock()
+        self.running=True
 
         # 게임 오브젝트 전부 초기화
         self.cannon=Cannon(SCREEN_WIDTH//2,SCREEN_HEIGHT-120)
@@ -392,13 +393,20 @@ class Game:
         # TODO: 배경 색깔 채우기.
         # TODO: 격자, 발사대, 버블 그리기.
         # TODO: UI (점수, 다음 버블, 정보) 표시하기.
-        pass
+        self.screen.fill((10,20,30))
+            # RGB 색상으로 채우기: 일단 어두운 파란색 배경
+        pygame.display.flip()
+            # 디스플레이 갱신함.
 
     # 메인 게임 루프 실행함.
     def run(self):
         while self.running:
             self.clock.tick(FPS)
-            self.update()
+                # 프레임 속도 제한함.
+            # 이벤트 큐에 쌓인 모든 이벤트를 가져옴.
+            for event in pygame.event.get():
+                if event.type==pygame.QUIT:
+                    self.running=False
             self.draw()
 
         # 종료 화면
