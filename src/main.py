@@ -16,12 +16,18 @@ pygame.init()
 # ======== 전역 설정 ========
 # 화면 설정
 """ 테스트용: 나중에 각각 1920, 1080으로 수정 """
-SCREEN_WIDTH:int=1080
+SCREEN_WIDTH:int=1200
     # 화면 너비
-SCREEN_HEIGHT:int=640
+SCREEN_HEIGHT:int=720
     # 화면 높이
 FPS:int=60
     # 초당 프레임 수
+
+# 투명도 값
+UI_ALPHA=180
+
+# 종료 화면 딜레이 값 (ms)
+END_SCREEN_DELAY=500
 
 # 게임 오브젝트 크기 설정
 CELL_SIZE:int=64
@@ -53,7 +59,7 @@ COLORS:dict[str,Tuple[int,int,int]]={
 # 맵 크기
 MAP_ROWS:int=12
     # 격자 행 수
-MAP_COLS:int=16
+MAP_COLS:int=24
     # 격자 열 수
 
 # 맵 데이터 1개만
@@ -197,7 +203,7 @@ class Cannon:
             # 최소 각도 제한
         self.max_angle:float=170
             # 최대 각도 제한
-        self.angle_speed:float=2.0
+        self.angle_speed:float=3.5
             # 회전 속도
 
     # 키보드 입력으로 각도 조정함.
@@ -330,10 +336,13 @@ class HexGrid:
         # 이 위치에 이미 버블이 있거나 슬래시 문자가 있는 경우
         if self.map[r][c] in COLORS or self.map[r][c]=='/':
             neighbors=self.get_neighbors(r,c)
-            # 각 neighbor 순회하면서 빈칸 찾으면 바로 반환.
+            # 각 neighbor 순회하면서 빈칸 찾으면 바로 반환
             for nr,nc in neighbors:
                 if self.is_in_bounds(nr,nc) and self.map[nr][nc]=='.':
-                    return nr,nc
+                    return nr,
+
+        # 빈 칸 못 찾으면 경고 로그
+        print(f"Warning: no empty cell found near. ({r},{c})")
         return r,c
 
     # 격자 범위를 체크함.
@@ -379,21 +388,22 @@ class HexGrid:
         """
         # TODO: 재귀적으로 같은 색깔 버블 찾기.
         # TODO: `visited` 집합에 좌표 추가하기.
-        # 범위 체크
-        if not self.is_in_bounds(row,col):
-            return
-        # 색상 일치 안 하면
-        if self.map[row][col]!=color:
-            return
-        # 이미 방문했으면
-        if (row,col) in visited:
-            return
-        # 방문 표시함
-        visited.add((row,col))
+        stack=[(row,col)]
 
-        # 재귀 탐색함.
-        for nr,nc in self.get_neighbors(row,col):
-            self.dfs_same_color(nr,nc,color,visited)
+        while stack:
+            r,c=stack.pop()
+
+            if not self.is_in_bounds(r,c):
+                continue
+            if self.map[r][c]!=color:
+                continue
+            if (r,c) in visited:
+                continue
+
+            visited.add((r,c))
+
+            for nr,nc in self.get_neighbors(r,c):
+                stack.append((nr,nc))
 
     # 특정 셀 제거함.
     def remove_cells(self,cells:Set[Tuple[int,int]])->None:
@@ -545,7 +555,7 @@ class ScoreDisplay:
         bg_rectangle.height+=padding*2
 
         bg_surface=pygame.Surface((bg_rectangle.width,bg_rectangle.height))
-        bg_surface.set_alpha(180)
+        bg_surface.set_alpha(UI_ALPHA)
             # value를 180으로 해서 반투명 적용
         bg_surface.fill((0,0,0))
             # 검은색으로
@@ -629,8 +639,9 @@ class Game:
     def random_color_from_map(self)->str:
         # TODO: 맵을 순회하면서 존재하는 색깔 수집하기.
         # TODO: random.choice()로 선택하기.
-        colors:Set[str]=set()
+        colors=set()
             # 빈 집합 생성
+
         for r in range(self.grid.rows):
             for c in range(self.grid.cols):
                 ch=self.grid.map[r][c]
@@ -872,7 +883,7 @@ class Game:
             next_y=SCREEN_HEIGHT-100
 
             bg_surface=pygame.Surface((120,120))
-            bg_surface.set_alpha(180)
+            bg_surface.set_alpha(UI_ALPHA)
                 # surface의 투명도 설정
             bg_surface.fill((0,0,0))
             self.screen.blit(bg_surface,(next_x-60,next_y-60))
@@ -924,7 +935,7 @@ class Game:
         )
 
         bg_surface=pygame.Surface((bg_rectangle.width, bg_rectangle.height))
-        bg_surface.set_alpha(180)
+        bg_surface.set_alpha(UI_ALPHA)
         bg_surface.fill((0,0,0))
         self.screen.blit(bg_surface,(bg_rectangle.x,bg_rectangle.y))
         self.screen.blit(info_txt,info_rect)
@@ -954,9 +965,9 @@ class Game:
 
         # 승리, 패배 메시지
         if self.current_stage>=len(STAGES):
-            msg="Success."
+            msg="Good."
         else:
-            msg="Fail."
+            msg="Bye."
 
         # 텍스트 렌더링하고 중앙 배치하기
         txt=font.render(msg,True,(255,255,255))
@@ -964,8 +975,8 @@ class Game:
         self.screen.blit(txt,rect)
 
         pygame.display.flip()
-        pygame.time.delay(2000)
-            # 2초 대기함.
+        pygame.time.delay(END_SCREEN_DELAY)
+            # 대기함.
 
 def main()->None:
     # 프로그램 시작점
