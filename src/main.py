@@ -330,8 +330,18 @@ class HexGrid:
         # TODO: 행, 열이 맵 범위 내에 있는지 확인하기.
         return 0<=r<self.rows and 0<=c<self.cols
 
-    # 육각 격자의 6개 이웃 좌표를 반환함.
+
     def get_neighbors(self,r:int,c:int)->List[Tuple[int,int]]:
+        """육각 격자의 6개 이웃 좌표를 반환함.
+
+        Args:
+            r (int): 현재 버블의 행(row) 인덱스
+            c (int): 현재 버블의 열(column) 인덱스
+
+        Returns:
+            List[Tuple[int, int]]: 인접한 6개 셀의 (행, 열) 좌표 리스트.
+                                    좌, 좌상, 우상, 우, 우하, 좌하 순서로 반환됨.
+        """
         # TODO: 짝수, 홀수 행에 따라서 다른 이웃 배열 반환하기.
         # 짝수 행이면
         if r%2==0:
@@ -348,35 +358,124 @@ class HexGrid:
 
     # 같은 색깔 버블을 DFS 탐색함.
     def dfs_same_color(self,row:int,col:int,color:str,visited:Set[Tuple[int,int]])->None:
+        """같은 색깔 버블을 DFS로 탐색함.
+
+        Args:
+            row (int): _description_
+            col (int): _description_
+            color (str): _description_
+            visited (Set[Tuple[int,int]]): 방문한 셀 집합
+        """
         # TODO: 재귀적으로 같은 색깔 버블 찾기.
         # TODO: `visited` 집합에 좌표 추가하기.
-        pass
+        # 범위 체크
+        if not self.is_in_bounds(row,col):
+            return
+        # 색상 일치 안 하면
+        if self.map[row][col]!=color:
+            return
+        # 이미 방문했으면
+        if (row,col) in visited:
+            return
+        # 방문 표시함
+        visited.add((row,col))
+
+        # 재귀 탐색함.
+        for nr,nc in self.get_neighbors(row,col):
+            self.dfs_same_color(nr,nc,color,visited)
 
     # 특정 셀 제거함.
     def remove_cells(self,cells:Set[Tuple[int,int]])->None:
+        """특정 셀 제거함.
+
+        Args:
+            cells (Set[Tuple[int,int]]): 제거할 셀의 좌표 집합
+        """
         # TODO: 맵에서 제거하기. ('.' 처리)
         # TODO: bubble_list에서 제거하기.
-        pass
+        cell_set=set(cells)
+        for (r,c) in cell_set:
+            self.map[r][c]='.'
+                # 맵에서 제거함.
+
+        self.bubble_list=[
+            b for b in self.bubble_list
+            if (b.row_idx,b.col_idx) not in cell_set
+        ]
 
     # 천장과 연결된 버블을 찾음. (DFS)
     def flood_from_top(self)->Set[Tuple[int,int]]:
+        """천장과 연결된 버블 찾음. (DFS 적용해서)
+
+        Returns:
+            Set[Tuple[int,int]]: 천장이랑 연결된 셀 좌표 집합
+        """
         # TODO: 첫 번째 행에서 DFS 시작하기.
         # TODO: 연결된 버블 집합 반환하기.
-        pass
+        visited: Set[Tuple[int,int]]=set()
+
+        # DFS 시작
+        for c in range(self.cols):
+            if self.map[0][c] in COLORS:
+                self._dfs_reachable(0,c,visited)
+
+        return visited
+
+
 
     # 천장 연결 DFS를 수행함.
     def _dfs_reachable(self,row:int,col:int,visited:Set[Tuple[int,int]])->None:
+        """천장 연결 DFS
+        재귀적으로 연결된 모든 버블 찾음.
+
+        Args:
+            row (int): _description_
+            col (int): _description_
+            visited (Set[Tuple[int,int]]): _description_
+        """
         # TODO: 재귀적으로 천장과 연결된 버블 탐색하기.
-        pass
+        if not self.is_in_bounds(row,col):
+            return
+
+        # 버블이 아니면
+        if self.map[row][col] not in COLORS:
+            return
+
+        # 이미 방문했으면
+        if (row,col) in visited:
+            return
+
+        visited.add((row,col))
+            # 방문 표시함.
+
+        for nr,nc in self.get_neighbors(row,col):
+            self._dfs_reachable(nr,nc,visited)
+
 
     # 천장과 연결되지 않은 버블을 제거함. (자유낙하)
     def remove_hanging(self)->None:
         # TODO: 천장 연결 버블 찾기.
         # TODO: 연결되지 않은 버블 삭제하기.
-        pass
+        # 연결된 것들
+        connected=self.flood_from_top()
+
+        # 연결 안 된 것들
+        not_connected:List[Tuple[int,int]]=[]
+
+        for r in range(self.rows):
+            for c in range(self.cols):
+                if self.map[r][c] in COLORS and (r,c) not in connected:
+                    not_connected.append((r,c))
+        if not_connected:
+            self.remove_cells(set(not_connected))
 
     # 모든 버블을 그림.
     def draw(self,screen:pygame.Surface)->None:
+        """모든 버블 그림.
+
+        Args:
+            screen (pygame.Surface): 그릴 화면 표면(Surface)
+        """
         # TODO: bubble_list에 들어있는 모든 버블 draw() 호출하기.
         for b in self.bubble_list:
             b.draw(screen)
@@ -399,12 +498,41 @@ class ScoreDisplay:
     # 점수 추가함.
     def add(self,points:int)->None:
         # TODO: 점수 증가시키기.
-        pass
+        """점수 추가함
+
+        Args:
+            points (int): 추가할 점수
+        """
+        self.score+=points
 
     # 점수를 화면에 표시함.
     def draw(self,screen:pygame.Surface)->None:
         # TODO: 점수 텍스트 렌더링하고 화면 출력하기.
-        pass
+        """점수 표시 그림.
+
+        Args:
+            screen (pygame.Surface): 그릴 화면 표면(pygame.Surface)
+        """
+        txt=self.font.render(f'Score: {self.score}',True,(255,255,255))
+
+        # 보기 편하게 반투명 배경 추가
+        padding=10
+        bg_rectangle=txt.get_rect()
+        bg_rectangle.x=20-padding
+        bg_rectangle.y=20-padding
+        bg_rectangle.width+=padding*2
+        bg_rectangle.height+=padding*2
+
+        bg_surface=pygame.Surface((bg_rectangle.width,bg_rectangle.height))
+        bg_surface.set_alpha(180)
+            # value를 180으로 해서 반투명 적용
+        bg_surface.fill((0,0,0))
+            # 검은색으로
+
+        screen.blit(bg_surface,(bg_rectangle.x,bg_rectangle.y))
+            # 배경 그림.
+        screen.blit(txt,(20,20))
+
 
 # ======== Game 클래스 - 메인 게임 로직 ========
 class Game:
@@ -419,12 +547,11 @@ class Game:
             # 게임 프레임 속도 제어하는 로직 (Clock 객체 생성)
         self.grid:HexGrid=HexGrid(MAP_ROWS,MAP_COLS,CELL_SIZE,wall_offset=0)
             # 육각 격자 객체
-        self.running:bool=True
-            # 게임 실행 여부
 
         # 게임 오브젝트 초기화
         self.cannon:Cannon=Cannon(SCREEN_WIDTH//2,SCREEN_HEIGHT-120)
             # 화면 하단 중간에 배치해놓기.
+
         self.score_ui:ScoreDisplay=ScoreDisplay()
             # 점수 UI 객체
 
@@ -441,6 +568,9 @@ class Game:
             # 발사 횟수 (4발마다 벽 하강함)
         self.prepare_bubbles()
             # 처음 버블 준비
+
+        self.running:bool=True
+            # 게임 실행 여부
 
         # 스테이지 로드 (임시)
         # self.load_stage(self.current_stage)
@@ -526,10 +656,41 @@ class Game:
 
     # 3개 이상 연결 시 터뜨림.
     def pop_if_match(self,row:int,col:int)->int:
+        """3개 이상 붙으면 터뜨림.
+
+        Args:
+            row (int): 부착된 버블 위치
+            col (int): 부착된 버블 위치
+
+        Returns:
+            int: 터진 버블 개수
+        """
         # TODO: DFS로 같은 색깔 버블 찾기.
         # TODO: 3개 이상이면 제거하고 점수 추가하기.
         # TODO: 자유낙하 버블 제거하기.
-        pass
+        color=self.grid.map[row][col]
+
+        # 색상 아니면 무시
+        if color not in COLORS:
+            return 0
+                # return 타입이 인티저라 '0'
+
+        # DFS로 같은 색 버블 찾음
+        visited=set()
+        self.grid.dfs_same_color(row,col,color,visited)
+
+        # 세 개 이상이면 터뜨리기.
+        if len(visited)>=3:
+            self.grid.remove_cells(visited)
+                # 버블 제거함.
+            self.grid.remove_hanging()
+                # 자유낙하 버블 제거함.
+            self.score_ui.add(len(visited)*10)
+                # 점수 추가 (버블당 10점 추가)
+            return len(visited)
+
+        # 안 터지면
+        return 0
 
     # 게임 로직 업데이트함.
     def update(self)->None:
@@ -555,10 +716,15 @@ class Game:
                         self.current_bubble.in_air=True
                         self.current_bubble.set_angle(self.cannon.angle)
 
+        # 발사체 이동할 때
         if self.current_bubble and self.fire_in_air:
             self.current_bubble.move()
-                # 발사체 이동함.
+            # 충돌 처리 로직
             if self.process_collision_and_attach():
+                # 붙여진 위치에서 매칭 검사함.
+                rr,cc=self.current_bubble.row_idx,self.current_bubble.col_idx
+                self.pop_if_match(rr,cc)
+
                 self.fire_in_air=False
                 self.prepare_bubbles()
 
@@ -588,6 +754,8 @@ class Game:
             self.current_bubble.draw(self.screen)
                 # 현재 버블이면 현재 버블 그리기.
 
+        self.score_ui.draw(self.screen)
+            # 점수 표시.
         pygame.display.flip()
             # 디스플레이 갱신함.
 
