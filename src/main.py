@@ -265,6 +265,7 @@ class HexGrid:
 
     # 육각 격자의 중심 좌표를 계산함.
     def get_cell_center(self,r:int,c:int)->Tuple[int,int]:
+        """"""
         # PARAMETERS: *r: row, *c: column
         # TODO: 짝수, 홀수 행에 따라서 다른 오프셋을 적용하기.
         # TODO: x, y 좌표 반환하기.
@@ -482,9 +483,17 @@ class HexGrid:
 
     # 벽 하강시킴. (4발 발사한 뒤)
     def drop_wall(self)->None:
+        """벽 하강(4발 발사하고 나서):
+
+        벽 한 칸 내려오면서 난이도 또한 증가.
+        """
         # TODO: wall_offset 증가시키기.
         # TODO: 모든 버블 위치 재계산하기.
-        pass
+        self.wall_offset+=WALL_DROP_PIXELS
+            # 오프셋 증가
+
+        for b in self.bubble_list:
+            cx,cy=self.get_cell_center(b.row_idx,b.col_idx)
 
 # ======== ScoreDisplay 클래스 - 점수 표시 ========
 class ScoreDisplay:
