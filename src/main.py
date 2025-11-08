@@ -46,7 +46,7 @@ END_SCREEN_DELAY=300
 # 게임 오브젝트 크기 설정
 CELL_SIZE:int=64
     # 육각형 격자 셀 간격
-BUBBLE_RADIUS:int=24
+BUBBLE_RADIUS:int=22
     # 버블 반지름
 BUBBLE_SPEED:int=14
     # 버블 발사 속도
@@ -176,6 +176,11 @@ class Bubble:
         # 버블 PNG 이미지 사용함.
         if BUBBLE_IMAGES:
             img=BUBBLE_IMAGES[self.color]
+
+            # 좌표를 정수로 반올림함. (픽셀 정렬)
+            x=round(self.x)
+            y=round(self.y)
+
             rect=img.get_rect(center=(int(self.x),int(self.y)))
             screen.blit(img,rect)
         else:
