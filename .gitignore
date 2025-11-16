@@ -38,3 +38,6 @@ Thumbs.db
 
 # Pygame
 *.pyc
+
+# VSCode temporary files
+**/tempCodeRunnerFile.py
