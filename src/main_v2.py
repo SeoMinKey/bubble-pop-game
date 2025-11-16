@@ -88,6 +88,34 @@ COLORS: dict[str, Tuple[int, int, int]] = {
 MAP_ROWS: int = 6
 MAP_COLS: int = 8
 
+# STAGES: List[List[List[str]]] = [
+#     # 스테이지 1
+#     [
+#         list("RRYYGGBBRRYY"),
+#         list("RRYYGGBBRRYG"), # / 대신 G로 채움
+#         list("BBGGRRYYBBGG"),
+#         list("BBGGRRYYBBGR"), # / 대신 R로 채움
+#         list("............"),
+#         list("............"),
+#         list("............"),
+#         list("............"),
+#         list("............"),
+#         list("............"),
+#     ],
+#     # 스테이지 2
+#     [
+#         list("R.Y.G.B.R.Y."),
+#         list("Y.G.B.R.Y.G."),
+#         list("G.B.R.Y.G.B."),
+#         list("B.R.Y.G.B.R."),
+#         list("....RRGGYYBB"),
+#         list("....RRGGYYBB"),
+#         list("............"),
+#         list("............"),
+#         list("............"),
+#         list("............"),
+#     ],
+# ]
 
 # ======== 유틸리티 함수 정의 ========
 def clamp(v: float, lo: float, hi: float) -> float:
@@ -508,6 +536,7 @@ class Game:
         # --- 발사대 위치 수정 --- (<-- 수정됨)
         cannon_x = self.game_rect.centerx
         cannon_y = self.game_rect.bottom - 170  # 게임 영역 하단에서 60px 위
+#         cannon_y = self.game_rect.bottom - 120  # 게임 영역 하단에서 60px 위
         self.cannon: Cannon = Cannon(cannon_x, cannon_y)
 
         # --- 게임 오버 라인 수정 --- (<-- 수정됨)
@@ -528,6 +557,11 @@ class Game:
             self.char_left = pygame.transform.smoothscale(self.char_left, (313, 546))
             self.char_right = pygame.transform.smoothscale(self.char_right, (308, 555))
             self.logo = pygame.transform.smoothscale(self.logo, (176, 176))
+            
+#             # (<-- 추가됨) 게임 영역 배경 이미지 로드
+#             self.game_area_bg = pygame.image.load(ASSET_PATHS['game_area_bg']).convert_alpha()
+#             # 원본 크기 사용, 앵커(중심)만 self.game_rect의 중심으로 설정
+#             self.game_area_bg_rect = self.game_area_bg.get_rect(center=self.game_rect.center)
             
         except pygame.error as e:
             print(f"배경/UI 이미지 로드 실패: {e}")
@@ -610,6 +644,14 @@ class Game:
             if bubble.color in COLORS:
                 colors.add(bubble.color)
         # 맵에 버블이 없으면 모든 색깔 사용 가능하도록 설정함.
+#         colors = set()
+#         for r in range(self.grid.rows):
+#             if r >= len(self.grid.map): continue # (<-- 안정성)
+#             for c in range(self.grid.cols):
+#                 if c >= len(self.grid.map[r]): continue # (<-- 안정성)
+#                 ch = self.grid.map[r][c]
+#                 if ch in COLORS:
+#                     colors.add(ch)
         if not colors:
             colors = set(COLORS.keys())
         return random.choice(list(colors))
@@ -728,6 +770,8 @@ class Game:
 
             if self.process_collision_and_attach():
                 # process_collision_and_attach() 내부에서 이미 pop_if_match()가 호출됨
+#                 rr, cc = self.current_bubble.row_idx, self.current_bubble.col_idx
+#                 self.pop_if_match(rr, cc)
                 self.fire_count += 1
                 if self.fire_count >= LAUNCH_COOLDOWN:
                     self.grid.drop_wall()
@@ -742,6 +786,7 @@ class Game:
             # 다음 스테이지 CSV 파일이 있는지 확인
             next_csv_path = f'assets/map_data/stage{self.current_stage + 1}.csv'
             if not os.path.exists(next_csv_path):
+#             if self.current_stage >= len(STAGES):
                 self.running = False
                 print("All stages cleared!")
             else:
@@ -777,6 +822,12 @@ class Game:
 
         # --- 2. 게임 영역 배경 그리기 ---
         pygame.draw.rect(self.screen, (0, 100, 200), self.game_rect)
+#         # --- 2. 파란색 게임 영역 그리기 --- (<-- 수정됨)
+#         # pygame.draw.rect(self.screen, (0, 100, 200), self.game_rect) # (<-- 삭제됨)
+#         if hasattr(self, 'game_area_bg'): # (<-- 추가됨)
+#             self.screen.blit(self.game_area_bg, self.game_area_bg_rect) # (<-- 추가됨)
+#         else: # (<-- 추가됨: 로드 실패 시 대체)
+#              pygame.draw.rect(self.screen, (0, 100, 200), self.game_rect)
 
         # --- 3. 게임 오버 라인 그리기 (스크린샷의 녹색 선) --- (<-- 추가됨)
         pygame.draw.line(self.screen, (0, 255, 3), 
@@ -819,10 +870,39 @@ class Game:
             self.next_bubble.draw(self.screen)
             # 원래 위치로 복원
             self.next_bubble.x, self.next_bubble.y = original_x, original_y
+#             next_x = self.cannon.x - 180 # 발사대 왼쪽
+#             next_y = self.cannon.y + 80  # 발사대 살짝 아래
+            
+#             # "NEXT" 텍스트 (검은색)
+#             font = pygame.font.Font(ASSET_PATHS['font'], 32)
+#             next_txt = font.render("NEXT", True, (0, 0, 0))
+#             next_txt_rect = next_txt.get_rect(center=(next_x, next_y - 30))
+#             self.screen.blit(next_txt, next_txt_rect)
+
+#             # 다음 버블 (흰색 원으로 표시)
+#             pygame.draw.circle(self.screen, (255,255,255), (next_x, next_y + 20), self.next_bubble.radius + 2)
+            
+#             # (버블 색상 대신 흰색 원으로 표시하는 스크린샷 반영)
+#             # pygame.draw.circle(
+#             #     self.screen,
+#             #     COLORS[self.next_bubble.color],
+#             #     (next_x, next_y),
+#             #     self.next_bubble.radius
+#             # )
+#             # pygame.draw.circle(
+#             #     self.screen, (255, 255, 255), (next_x, next_y), self.next_bubble.radius, 2
+#             # )
 
 
         # --- 7. 점수 UI 그리기 (레벨 전달) --- (<-- 수정됨)
         self.score_ui.draw(self.screen, self.current_stage + 1)
+
+        # --- 8. 상단 정보 UI 제거 ---
+        # (스코어/레벨이 왼쪽 상단으로 이동했으므로 기존 중앙 UI는 주석 처리)
+        # font = pygame.font.Font(None, 40)
+        # info = f'Stage {self.current_stage+1}/{len(STAGES)} | Shots {self.fire_count}/{LAUNCH_COOLDOWN} | Angle {int(self.cannon.angle)}'
+        # ... (이하 생략) ...
+
         pygame.display.flip()
 
     def show_stage_clear(self) -> None:
@@ -865,6 +945,7 @@ class Game:
         # 다음 스테이지 CSV 파일이 있는지 확인하여 승리/패배 판단
         next_csv_path = f'assets/map_data/stage{self.current_stage + 1}.csv'
         if not os.path.exists(next_csv_path):
+#         if self.current_stage >= len(STAGES):
             msg = "YOU WIN!" # (<-- 수정됨)
         else:
             msg = "GAME OVER" # (<-- 수정됨)
