@@ -1,6 +1,7 @@
 import pygame
 from scene_manager import SceneManager
 from game_scene import GameScene
+from config import SCREEN_HEIGHT,SCREEN_WIDTH
 
 class MenuScene:
     def __init__(self,manager):
@@ -39,7 +40,11 @@ class MenuScene:
 
             text=self.font.render(option,True,color)
                 # 렌더링
-            # FIXME: 위치 조정
-            text_rectangle=text.get_rect(center=(400,250+index*50))
+            # FIXME: 위치 조정: y좌표 조정
+            text_rectangle=text.get_rect(center=(400,SCREEN_HEIGHT*2/3+index*50))
 
             screen.blit(text,text_rectangle)
+
+    def update(self):
+        # TODO: 업데이트할 내용 있으면 나중에 구현
+        pass

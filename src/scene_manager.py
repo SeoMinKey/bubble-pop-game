@@ -1,10 +1,14 @@
 class SceneManager:
-    def __init__(self,start_scene):
-        self.current_scene = start_scene
+    # def __init__(self,start_scene):
+    #     self.current_scene = start_scene
+    def __init__(self, factory):
+        self.factory = factory
+        self.current_scene=None
 
-    def change(self,new_scene):
+
+    def change(self,scene_name):
         """씬 전환"""
-        self.current_scene=new_scene
+        self.current_scene=self.factory(scene_name,self)
 
     def handle_event(self,event):
         """현재 씬 이벤트 처리"""

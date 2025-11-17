@@ -7,6 +7,11 @@ from typing import List, Set, Tuple, Optional
 
 import pygame
 
+# 메뉴 UI
+from scene_manager import SceneManager
+from menu_scene import MenuScene
+
+# 설정 파일, 모듈들
 from config import (
     SCREEN_WIDTH,SCREEN_HEIGHT,FPS,CELL_SIZE,BUBBLE_RADIUS,BUBBLE_SPEED,
     LAUNCH_COOLDOWN,WALL_DROP_PIXELS,MAP_ROWS,MAP_COLS,
@@ -47,9 +52,9 @@ sys.path.append(str(Path(__file__).parent))
 #     'tap_sound': 'assets/sounds/tap.wav',  # 달라붙을 때 재생할 효과음
 # }
 
-# 게임 초기화
-pygame.init()
-pygame.mixer.init()  # 사운드 시스템 초기화
+# 게임 초기화 [수정: main()에 옮김.]
+# pygame.init()
+# pygame.mixer.init()  # 사운드 시스템 초기화
 
 # 버블 이미지 로드
 try:
@@ -1003,7 +1008,36 @@ class Game:
         pygame.time.delay(END_SCREEN_DELAY)
 
 def main() -> None:
-    # 프로그램 시작점
+    """시작점"""
+    pygame.init()
+    pygame.mixer.init()  # 사운드 시스템 초기화
+
+    # FIXME: 화면 설정
+    screen=pygame.display.set_mode((SCREEN_WIDTH,SCREEN_HEIGHT))
+    clock=pygame.time.Clock()
+
+    # MenuScene으로 일단 시작
+    manager=SceneManager(MenuScene(manager=None))
+    manager.current_scene.manager=manager
+        # SceneManager 연결
+
+    running=True
+    while running:
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                running=False
+            manager.handle_event(event)
+
+        manager.update()
+        manager.draw(screen)
+
+        pygame.display.flip()
+        # FIXME: 60FPS로 설정
+        clock.tick(60)
+
+    pygame.quit()
+
+
     if not BUBBLE_IMAGES:
         print("경고: 버블 이미지를 찾을 수 없습니다. 색상 원으로 대체합니다.")
         # (필요시, 여기서 로드 실패 시 게임을 종료할 수 있음)
