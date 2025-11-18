@@ -10,7 +10,6 @@ import pygame
 # 메뉴 UI
 from scene_manager import SceneManager
 from menu_scene import MenuScene
-from game_scene import GameScene
 
 # 설정 파일, 모듈들
 from config import (
@@ -1012,8 +1011,8 @@ def scene_factory(scene_name,manager):
     """씬 생성 팩토리"""
     if scene_name=='menu':
         return MenuScene(manager)
-    if scene_name=='game':
-        return GameScene(manager)
+    # if scene_name=='game':
+    #     return GameScene(manager)
     raise ValueError(f'unknown scene: {scene_name}')
 
 def main() -> None:
