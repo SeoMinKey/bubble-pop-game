@@ -3,7 +3,7 @@ class SceneManager:
     #     self.current_scene = start_scene
     def __init__(self,factory):
         self.factory = factory
-            # 씬 종류에 따른 적절한 씬 객체 생성
+        """씬 종류에 따른 적절한 씬 객체 생성"""
         self.current_scene=None
 
 
@@ -13,12 +13,15 @@ class SceneManager:
 
     def handle_event(self,event):
         """현재 씬 이벤트 처리"""
-        self.current_scene.handle_event(event)
+        if self.current_scene and hasattr(self.current_scene,'handle_event'):
+            self.current_scene.handle_event(event)
 
-    def update(self):
+    def update(self,dt):
         """현재 씬 업데이트"""
-        self.current_scene.update()
+        if self.current_scene and hasattr(self.current_scene,'update'):
+            self.current_scene.update(dt)
 
     def draw(self,screen):
         """현재 씬 그리기."""
-        self.current_scene.draw(screen)
+        if self.current_scene and hasattr(self.current_scene,'draw'):
+            self.current_scene.draw(screen)

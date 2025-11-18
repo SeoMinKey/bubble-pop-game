@@ -1,18 +1,17 @@
 import pygame
-from scene_manager import SceneManager
-from game_scene import GameScene
+# from scene_manager import SceneManager
+# from game_scene import GameScene
 from config import SCREEN_HEIGHT,SCREEN_WIDTH
 
 class MenuScene:
     def __init__(self,manager):
         self.manager=manager
         # FIXME: 폰트 임시 설정
-        self.font=pygame.font.SysFont('Arial',48)
+        self.font=pygame.font.Font(None,48)
         # FIXME: 메뉴 항목
         # self.options=['Start Game','Settings','Quit']
         self.options=['Start Game','Quit']
         self.selected_index=0
-            # 리스트 안에서 현재 선택된 인덱스
 
     def handle_event(self,event):
         if event.type==pygame.KEYDOWN:
@@ -28,10 +27,11 @@ class MenuScene:
                 if self.selected_index==0:
                     # self.manager.change(GameScene(self.manager))
                     self.manager.change('game')
+                        # scene_manager에 game 요청해서 팩토리에서 game 인스턴스 만들어짐.
                 # Exit 선택 시
                 elif self.selected_index==1:
                     pygame.quit()
-                    exit()
+                    raise SystemExit()
 
     def draw(self,screen):
         # FIXME: 배경 색상 임시 설정
@@ -42,10 +42,10 @@ class MenuScene:
 
             text=self.font.render(option,True,color)
             # FIXME: 위치 조정: y좌표 조정
-            rect=text.get_rect(center=(400,300+index*60))
-
+            # rect=text.get_rect(center=(400,300+index*60))
+            rect=text.get_rect(center=(SCREEN_WIDTH//2,SCREEN_HEIGHT//2+index*60))
             screen.blit(text,rect)
 
-    def update(self):
+    def update(self,dt):
         # TODO: 업데이트할 내용 있으면 나중에 구현
         pass
