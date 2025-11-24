@@ -3,9 +3,11 @@
 BASE_SCREEN_WIDTH: int = 1920
 BASE_SCREEN_HEIGHT: int = 1080
 
-# 현재 화면 크기 (사용자가 변경 가능)
-SCREEN_WIDTH: int = 1280
-SCREEN_HEIGHT: int = 720
+# 현재 화면 가로 크기 (사용자가 변경 가능) 2560/1920/1280/
+# 맥북 기준 1450 적당함
+SCREEN_WIDTH: int = 1450
+
+SCREEN_HEIGHT: int = (SCREEN_WIDTH / 16) * 9
 FPS: int = 60
 
 # 스케일 비율 계산 (현재 해상도 / 기본 해상도)
