@@ -1,7 +1,10 @@
 ---
-# Bubble Pop Game
+# "중요: README, CONTRIBUTORS 등 문서 다듬을 필요 있음."
+# "중요: README, CONTRIBUTORS 등 문서 다듬을 필요 있음."
 
-Python pygame 기반의 버블 슈터 게임
+# Bubble Pop Game 
+
+Python pygame 기반의 버블 슈터 게임 
 
 ![Python](https://img.shields.io/badge/Python-3.11-blue.svg)
 ![Pygame](https://img.shields.io/badge/Pygame-2.5.2-green.svg)
@@ -23,7 +26,7 @@ python src/main.py
 
 ## 주요 기능
 
-![시작 스크린샷](screenshot.png)
+![시작 스크린샷](screenshot_2.png)
 - **육각형 격자 시스템**: 홀/짝 행 오프셋 활용한 여섯 방향 이웃 탐색
 - **물리 엔진**: 발사 각도 계산, 벽 반사 처리
 - **DFS 알고리즘**: 같은 색 버블 3개 이상 연결 시 제거함
