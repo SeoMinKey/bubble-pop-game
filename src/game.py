@@ -16,7 +16,7 @@ from game_settings import (
     END_SCREEN_DELAY,POP_SOUND_VOLUME,TAP_SOUND_VOLUME
 )
 from asset_paths import ASSET_PATHS
-from constants import BubbleColor,GameState
+from constants import BubbleColor,GameState,Itemtype
 from color_settings import (COLORS,
                             COLOR_MAP)
 
@@ -355,6 +355,17 @@ class HexGrid:
             cx,cy=self.get_cell_center(b.row_idx,b.col_idx)
             b.x,b.y=cx,cy
 
+    def raise_wall(self)->None:
+        """벽을 한 칸 올려서(위로 이동) 여유 공간 늘림.
+        """
+        if self.wall_offset<=0:
+            # 더 이상 못 올리면
+            return
+        self.wall_offset=max(0,self.wall_offset-WALL_DROP_PIXELS)
+        for b in self.bubble_list:
+            cx,cy=self.get_cell_center(b.row_idx,b.col_idx)
+            b.x,b.y=cx,cy
+
 # ======== ScoreDisplay ========
 class ScoreDisplay:
     def __init__(self)->None:
@@ -455,6 +466,14 @@ class Game:
         self.fire_in_air:bool=False
         self.fire_count:int=0
         self.running:bool=True
+        # --- 특수 아이템 개수 설정 (임시: 테스트용) ---
+        self.item_swap_count:int=3
+            # 버블 스왑 아이템 개수
+        self.item_raise_count:int=3
+            # 벽 한 줄 올리기 아이템 개수
+        self.item_rainbow_count:int=3
+            # 무지개 버블 아이템 개수
+        # ------------------------------------------
 
         self.load_stage(self.current_stage)
 
@@ -578,6 +597,13 @@ class Game:
                         self.fire_in_air=True
                         self.current_bubble.in_air=True
                         self.current_bubble.set_angle(self.cannon.angle)
+                # --- 특수 아이템 테스트용 단축키 ---
+                elif event.key==pygame.K_1:
+                    self.use_item_swap()
+                elif event.key==pygame.K_2:
+                    self.use_item_raise()
+                elif event.key==pygame.K_3:
+                    self.use_item_rainbow()
 
         keys=pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
@@ -632,6 +658,76 @@ class Game:
             return 0
         bottoms=[b.y+b.radius for b in self.grid.bubble_list]
         return int(max(bottoms))
+
+    def use_item_swap(self)->None:
+        """현재 버블과 다음 버블 스왑함.
+        """
+        if self.item_swap_count<=0:
+            print("No SWAP items left.")
+            return
+        if self.current_bubble is None or self.next_bubble is None:
+            print("Cannot swap: one of the bubbles is missing.")
+            return
+
+        # 색깔만 스왑: 필요하면 나중에 속성도 같이 스왑하면 될 것 같아요.
+        self.current_bubble.color,self.next_bubble.color=self.next_bubble.color,self.current_bubble.color
+
+        self.item_swap_count-=1
+        print(f"SWAP used. Remaining: {self.item_swap_count}")
+
+    def use_item_raise(self)->None:
+        """벽을 한 줄 올림.
+        """
+        if self.item_raise_count<=0:
+            print("No RAISE items left.")
+            return
+
+        # HexGrid에 위임
+        before_offset=self.grid.wall_offset
+        self.grid.raise_wall()
+
+        if self.grid.wall_offset==before_offset:
+            print("Cannot RAISE: wall is already at the top.")
+            return
+
+        self.item_raise_count-=1
+        print(f"RAISE used. Remaining: {self.item_raise_count}")
+
+    def best_color_for_rainbow(self)->str:
+        """현재 맵에서 가장 많이 남아있는 색 선택함.
+
+        Returns:
+            str: 가장 많이 등장한 색을 반환
+        """
+        color_count:dict[str,int]={}
+
+        for b in self.grid.bubble_list:
+            if b.color in COLORS:
+                color_count[b.color]=color_count.get(b.color,0)+1
+
+        # 맵 거의 비어있으면 그냥 랜덤 색
+        if not color_count:
+            return random.choice(list(COLORS.keys()))
+        # 가장 많이 등장한 색 반환함.
+        best=max(color_count,key=color_count.get)
+        return best
+
+    def use_item_rainbow(self)->None:
+        # FIXME: 일단 현재 버블을 상황에 맞는 색으로 바꾸게끔 구현 (B안 적용)
+        """현재 버블
+        """
+        if self.item_rainbow_count<=0:
+            print("No RAINBOW items left.")
+            return
+        if self.current_bubble is None:
+            print("Cannot use RAINBOW: current bubble is missing.")
+            return
+
+        best_color=self.best_color_for_rainbow()
+        self.current_bubble.color=best_color
+
+        self.item_rainbow_count-=1
+        print(f"RAINBOW used. Remaining: {self.item_rainbow_count}")
 
     def draw(self)->None:
         if self.background_image:
