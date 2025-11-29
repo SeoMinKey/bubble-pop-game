@@ -4,6 +4,7 @@ ASSET_PATHS = {
     'bubble_blue': 'assets/images/bubble_blue.png',
     'bubble_green': 'assets/images/bubble_green.png',
     'background': 'assets/images/background.png',
+    'editor_bg': 'assets/images/editor_bg.png',
     'char_left': 'assets/images/char_left.png',
     'char_right': 'assets/images/char_right.png',
     'logo': 'assets/images/logo.png',

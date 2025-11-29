@@ -199,6 +199,15 @@ class MapEditor:
             except:
                 pass
 
+        # --- 배경 이미지 로드 (화면 크기에 맞춰 스케일링) ---
+        self.editor_bg = None
+        if ASSET_PATHS.get('editor_bg') and os.path.exists(ASSET_PATHS['editor_bg']):
+            try:
+                self.editor_bg = pygame.image.load(ASSET_PATHS['editor_bg']).convert()
+                self.editor_bg = pygame.transform.smoothscale(self.editor_bg, (SCREEN_WIDTH, SCREEN_HEIGHT))
+            except:
+                pass
+
         # --- 게임 영역 (bg_box) 계산 ---
         # CELL_SIZE는 이미 스케일링 된 값임
         map_pixel_width = (MAP_COLS * CELL_SIZE) + (CELL_SIZE // 2)
@@ -510,7 +519,11 @@ class MapEditor:
 
     def draw_ui(self):
         """UI 렌더링 (SCALE 적용)"""
-        self.screen.fill(THEME_BG)
+        # 배경 이미지가 있으면 배경 이미지 사용, 없으면 기본 배경색
+        if self.editor_bg:
+            self.screen.blit(self.editor_bg, (0, 0))
+        else:
+            self.screen.fill(THEME_BG)
 
         # 1. 게임 영역
         pygame.draw.rect(self.screen, (0, 100, 200), self.game_rect)
