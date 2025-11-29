@@ -265,7 +265,7 @@ class MapEditor:
 
         # 패널 내부 상대 좌표
         start_x = self.left_panel_rect.x + int(107 * SCALE)
-        start_y = self.left_panel_rect.y + int(139 * SCALE)
+        start_y = self.left_panel_rect.y + int(170 * SCALE)
         gap = int(130 * SCALE)
 
         btn_size = int(70 * SCALE)
@@ -283,7 +283,7 @@ class MapEditor:
         # 지우개 버튼
         erase_w = int(140 * SCALE)
         erase_h = int(50 * SCALE)
-        erase_offset_y = int(180 * SCALE)
+        erase_offset_y = int(300 * SCALE)
         
         erase_btn = Button(self.left_panel_rect.centerx - (erase_w // 2), start_y + erase_offset_y, 
                            erase_w, erase_h, "ERASE",
@@ -445,9 +445,9 @@ class MapEditor:
         mouse_pressed = pygame.mouse.get_pressed()
 
         # 스크롤바 위치 상수도 스케일링 필요
-        right_panel_margin = int(280 * SCALE)
+        right_panel_margin = int(479 * SCALE)
         right_x = SCREEN_WIDTH - right_panel_margin
-        list_start_y = int(110 * SCALE)
+        list_start_y = int(399 * SCALE)
 
         if self.scrollbar_dragging and mouse_pressed[0]:
             if self.scrollbar_rect and len(self.file_list) > self.max_visible_files:
@@ -490,13 +490,13 @@ class MapEditor:
             # 우측 패널 선택 영역도 스케일링 (패널 내부 좌표 기준 오프셋 적용)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # 1. 리스트가 시작되는 정확한 Y 좌표 (draw_ui의 list_start_y와 일치)
-                list_start_y = int(110 * SCALE)
-                
+                list_start_y = int(399 * SCALE)
+
                 # 2. 리스트 영역의 높이 계산 (아이템 높이 * 보이는 개수)
                 list_area_height = self.max_visible_files * self.item_height
-                
+
                 # 3. 우측 패널 X 시작 좌표 재계산 (혹시 변수가 scope 밖에 있을 경우 대비)
-                right_panel_margin = int(280 * SCALE)
+                right_panel_margin = int(479 * SCALE)
                 right_x = SCREEN_WIDTH - right_panel_margin
 
                 # 4. 클릭 판정: Y좌표가 [리스트 시작점] ~ [리스트 끝점] 사이인지 확인
@@ -544,24 +544,24 @@ class MapEditor:
             self.screen.blit(title_surf, (title_x, title_y))
 
         # PALETTE 라벨
-        label_offset_y = int(30 * SCALE)
-        palette_txt = self.font_ui.render("Selected Bubble : ", True, THEME_BORDER)
-        p_rect = palette_txt.get_rect(center=(self.left_panel_rect.centerx, self.left_panel_rect.y + label_offset_y))
-        self.screen.blit(palette_txt, p_rect)
+        label_offset_x = int(80 * SCALE)
+        label_offset_y = int(70 * SCALE)
+        palette_txt = self.font_title.render("Bubble : ", True, THEME_BORDER)
+        self.screen.blit(palette_txt, (self.left_panel_rect.x + label_offset_x, self.left_panel_rect.y + label_offset_y))
 
         # 현재 브러쉬
         cur_img = self.bubble_images.get(self.selected_brush)
-        brush_offset_x = int(150 * SCALE)
-        brush_offset_y = int(30 * SCALE)
+        brush_offset_x = int(70 * SCALE)
+        brush_offset_y = int(80 * SCALE)
         
         if cur_img:
             rect = cur_img.get_rect(center=(self.left_panel_rect.centerx + brush_offset_x, self.left_panel_rect.y + brush_offset_y))
             self.screen.blit(cur_img, rect)
         elif self.selected_brush == '.':
             e_txt = self.font_ui.render("ERASER", True, (200, 200, 200))
-            e_rect_offset = int(120 * SCALE)
-            e_rect = e_txt.get_rect(center=(self.left_panel_rect.centerx, self.left_panel_rect.y + e_rect_offset))
-            self.screen.blit(e_txt, e_rect)
+            e_rect_offset_x = int(250 * SCALE)
+            e_rect_offset_y = int(80 * SCALE)
+            self.screen.blit(e_txt, (self.left_panel_rect.x + e_rect_offset_x, self.left_panel_rect.y + e_rect_offset_y))
 
         for btn in self.palette_buttons: btn.draw(self.screen, self.font_ui)
 
@@ -582,8 +582,8 @@ class MapEditor:
                         (right_x, right_panel_y, right_panel_width, panel_height),
                         max(1, int(15 * SCALE)), border_radius=border_radius)
 
-        st_title_offset_x = int(60 * SCALE)
-        st_title_offset_y = int(65 * SCALE)
+        st_title_offset_x = int(140 * SCALE)
+        st_title_offset_y = int(350 * SCALE)
         st_title = self.font_title.render("STAGES", True, THEME_BORDER)
         self.screen.blit(st_title, (right_x + st_title_offset_x, st_title_offset_y))
 
