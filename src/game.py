@@ -20,6 +20,8 @@ from constants import BubbleColor,GameState,Itemtype
 from color_settings import (COLORS,
                             COLOR_MAP)
 
+from obstacle import Obstacle
+
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent))
 
@@ -188,6 +190,7 @@ class HexGrid:
         self.y_offset:int=y_offset
         self.map:List[List[str]]=[['.' for _ in range(cols)] for _ in range(rows)]
         self.bubble_list:List[Bubble]=[]
+        self.obs_list:List[Obstacle]=[]
 
     def load_from_stage(self,stage_map:List[List[str]])->None:
         self.map=[row[:] for row in stage_map]
@@ -200,12 +203,23 @@ class HexGrid:
                     ch=self.map[r][c]
                 else:
                     ch='.'
+
+                # 버블 파싱
                 if ch in COLORS:
                     x,y=self.get_cell_center(r,c)
                     b=Bubble(x,y,ch)
                     b.is_attached=True
                     b.set_grid_index(r,c)
                     self.bubble_list.append(b)
+                    continue
+
+                # 장애물 파싱
+                if ch=='N':
+                    obsx,obsy=self.get_cell_center(r,c)
+                    ob=Obstacle(obsx,obsy,BUBBLE_RADIUS)
+                    self.obs_list.append(ob)
+                    self.map[r][c]='N'
+                    continue
 
     def get_cell_center(self,r:int,c:int)->Tuple[int,int]:
         x=c*self.cell+self.cell//2+self.x_offset
@@ -348,6 +362,9 @@ class HexGrid:
     def draw(self,screen:pygame.Surface)->None:
         for b in self.bubble_list:
             b.draw(screen)
+
+        for ob in self.obs_list:
+            ob.draw(screen)
 
     def drop_wall(self)->None:
         self.wall_offset+=WALL_DROP_PIXELS
@@ -554,6 +571,24 @@ class Game:
                             self.tap_sound.play()
                         except:
                             pass
+                return True
+
+        # 장애물 충돌 검사
+        for ob in self.grid.obs_list:
+            dist=math.hypot(self.current_bubble.x-ob.x,self.current_bubble.y-ob.y)
+            if dist<=self.current_bubble.radius+ob.radius-2:
+                r,c=self.grid.nearest_grid_to_point(self.current_bubble.x,self.current_bubble.y)
+                self.grid.place_bubble(self.current_bubble,r,c)
+
+                # popped_count=self.pop_if_match(r,c)
+                # if popped_count==0:
+                # 장애물 위에 붙여도 매칭은 안 됨.
+                if hasattr(self,'tap_sound') and self.tap_sound:
+                    try:
+                        self.tap_sound.play()
+                    except:
+                        pass
+
                 return True
 
         return False
