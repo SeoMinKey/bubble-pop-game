@@ -505,9 +505,13 @@ class Game:
         # ------------------------------------------
 
         # --- 요청 플래그만 추가 (임시: 테스트용) ---
-        self.use_swap=False
-        self.use_raise=False
-        self.use_rainbow=False
+            # 플래그 방식 안 쓸 예정.
+
+        # FIXME: UI용 폰트
+        self.ui_font=pygame.font.SysFont('malgungothic',20)
+
+        # 아이템 버튼 초기화
+        self.init_item_buttons()
 
         self.load_stage(self.current_stage)
 
@@ -554,6 +558,91 @@ class Game:
         self.current_bubble.x,self.current_bubble.y=self.cannon.x,self.cannon.y
         self.current_bubble.in_air=False
         self.next_bubble=self.create_bubble()
+
+    def init_item_buttons(self)->None:
+        btn_w,btn_h=80,80
+        padding=12
+        x=SCREEN_WIDTH-btn_w-40
+        y0=140
+
+        self.item_buttons=[
+            {'type':'swap',
+             'rect':pygame.Rect(x, y0 + 0*(btn_h+padding), btn_w, btn_h)},
+            {'type':'raise',
+             'rect': pygame.Rect(x, y0 + 1*(btn_h+padding), btn_w, btn_h)},
+            {'type':'rainbow',
+             'rect': pygame.Rect(x, y0 + 2*(btn_h+padding), btn_w, btn_h)},
+        ]
+
+        # 버튼 눌림 연출용 타이머 구현 (ms 단위로)
+        self.item_button_pressed_until={
+            'swap':0,
+            'raise':0,
+            'rainbow':0,
+        }
+
+    def handle_mouse_click(self,pos:Tuple[int,int])->None:
+        mx,my=pos
+        for btn in self.item_buttons:
+            if btn['rect'].collidepoint(mx,my):
+                self.handle_item_button_click(btn['type'])
+                break
+
+    def handle_item_button_click(self,item_type:str)->None:
+        # 아이템 수량 0개면 그냥 무시
+        if item_type=='swap' and self.item_swap_count<=0:
+            print("No SWAP items left.")
+            return
+        if item_type=='raise' and self.item_raise_count<=0:
+            print("No RAISE items left.")
+            return
+        if item_type=='rainbow' and self.item_rainbow_count<=0:
+            print("No RAINBOW items left.")
+            return
+
+        # 로직 적용 (UI 클릭하면 그 순간 바로 효과 반영함)
+        if item_type=='swap':
+            self.use_item_swap()
+        elif item_type=='raise':
+            self.use_item_raise()
+        elif item_type=='rainbow':
+            self.use_item_rainbow()
+
+        # 버튼 눌림 연출용 타이머 설정 (120ms 정도 유지)
+        now=pygame.time.get_ticks()
+        self.item_button_pressed_until[item_type]=now+120
+
+    def draw_item_buttons(self,screen:pygame.Surface)->None:
+        now=pygame.time.get_ticks()
+
+        for btn in self.item_buttons:
+            rect=btn['rect']
+            item_type=btn['type']
+            pressed=now<self.item_button_pressed_until[item_type]
+
+            # FIXME: 임시 버튼 배경 (<-- 나중에 PNG로 교체)
+            pygame.draw.rect(screen,(30,30,30),rect)
+            border_w=4 if pressed else 2
+            pygame.draw.rect(screen,(220,220,220),rect,border_w)
+
+            # 라벨 + 남은 개수
+            if item_type=='swap':
+                label='SWAP'
+                cnt=self.item_swap_count
+            elif item_type=='raise':
+                label='RAISE'
+                cnt=self.item_raise_count
+            else: # rainbow
+                label='RAIN'
+                cnt=self.item_rainbow_count
+
+            text_surf=self.ui_font.render(label,True,(255,255,255))
+            text_rect=text_surf.get_rect(center=(rect.centerx,rect.centery-14))
+            screen.blit(text_surf,text_rect)
+
+            cnt_surf=self.ui_font.render(str(cnt),True,(255,255,0))
+            cnt_rect=cnt_surf.get_rect(center=(rect.centerx,rect.centery+18))
+            screen.blit(cnt_surf,cnt_rect)
 
     def process_collision_and_attach(self)->bool:
         if self.current_bubble is None:
@@ -650,16 +739,19 @@ class Game:
                         self.current_bubble.in_air=True
                         self.current_bubble.set_angle(self.cannon.angle)
                 # --- 특수 아이템 테스트용 단축키 ---
+                # FIXME: 키보드 1/2/3 --> 바로 아이템 사용
+                # FIXME: 마우스 왼쪽 버튼 클릭 --> handle_mouse_click() 호출
+                    # --> 버튼 클릭하면 아이템 사용
                 elif event.key==pygame.K_1:
-                    # self.use_item_swap()
-                    # FIXME: 직접 실행 대신 flag만 일단 세움.
-                    self.use_swap=True
+                    self.use_item_swap()
                 elif event.key==pygame.K_2:
-                    # self.use_item_raise()
-                    self.use_raise=True
+                    self.use_item_raise()
                 elif event.key==pygame.K_3:
-                    # self.use_item_rainbow()
-                    self.use_rainbow=True
+                    self.use_item_rainbow()
+
+            elif event.type==pygame.MOUSEBUTTONDOWN and event.button==1:
+                self.handle_mouse_click(event.pos)
+
 
         keys=pygame.key.get_pressed()
         if keys[pygame.K_LEFT]:
@@ -675,17 +767,8 @@ class Game:
                 self.prepare_bubbles()
                 return
             # --- 특수 아이템 플래그 처리(임시) ---
-            if self.use_swap:
-                self.use_item_swap()
-                self.use_swap=False
-
-            if self.use_raise:
-                self.use_item_raise()
-                self.use_raise=False
-
-            if self.use_rainbow:
-                self.use_item_rainbow()
-                self.use_rainbow=False
+            # 플래그 방식 안 쓸 예정이라 지움.
+            # AttributeError 터질 것 같음.
             # --------------------------
             if self.process_collision_and_attach():
                 self.fire_count+=1
@@ -839,6 +922,10 @@ class Game:
             self.next_bubble.x,self.next_bubble.y=original_x,original_y
 
         self.score_ui.draw(self.screen,self.current_stage+1)
+
+        self.draw_item_buttons(self.screen)
+            # 아이템 버튼 그리기.
+
         pygame.display.flip()
 
     def show_stage_clear(self)->None:
